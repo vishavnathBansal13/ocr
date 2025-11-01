@@ -1,0 +1,239 @@
+e.preventDefault();
+    setWidgetError(null);
+    setLoading(true);
+
+    const newErrors: FormErrors = {};
+    if (!formData.userId) newErrors.userId = "User ID is required.";
+    if (!formData.access_token)
+      newErrors.access_token = "Access Token is required.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setShowClientAuthForm(false);
+      setLoading(false); // Don't forget to stop loading on error
+
+      // Show toast for each error message
+      Object.values(newErrors).forEach((errorMessage) => {
+        showToast("error", errorMessage);
+      });
+    } else {
+      setErrors({});
+      setShowClientAuthForm(true);
+      // Let the widget handle further async work — stop loading right after form show
+      setLoading(false);
+    }
+  };
+=======
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setWidgetError(null);
+    setLoading(true);
+
+    const newErrors: FormErrors = {};
+    if (!formData.userId) newErrors.userId = "User ID is required.";
+    if (!formData.access_token)
+      newErrors.access_token = "Access Token is required.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setShowClientAuthForm(false);
+      setLoading(false); // Don't forget to stop loading on error
+
+      // Show toast for each error message
+      Object.values(newErrors).forEach((errorMessage) => {
+        showToast("error", errorMessage);
+      });
+    } else {
+      setErrors({});
+      setShowClientAuthForm(true);
+      // Let the widget handle further async work — stop loading right after form show
+      setLoading(false);
+    }
+  };
+
+  // New function to handle the API calls sequence
+  const handleGetCredentialsAndGenerateLink = async () => {
+    setLoading(true);
+    setWidgetError(null);
+    try {
+      // 1. GET client credentials
+      const credentialsResponse = await fetch(
+        "https://137c-2404-7c80-5c-eaba-f5c6-9913-ec59-4f68.ngrok-free.app/mmp/get_client_credentials",
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+        }
+      );
+      if (!credentialsResponse.ok) {
+        throw new Error(\`Failed to get client credentials: \${credentialsResponse.statusText}\`);
+      }
+      const credentialsData = await credentialsResponse.json();
+      const { client_id, client_secret } = credentialsData;
+
+      if (!client_id || !client_secret) {
+        throw new Error("Client ID or Client Secret missing in response");
+      }
+      showToast("success", "Client credentials obtained");
+
+      // 2. POST to get token
+      const tokenResponse = await fetch(
+        "https://137c-2404-7c80-5c-eaba-f5c6-9913-ec59-4f68.ngrok-free.app/mmp/token",
+        {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            client_id,
+            client_secret,
+          }),
+        }
+      );
+      if (!tokenResponse.ok) {
+        throw new Error(\`Failed to get token: \${tokenResponse.statusText}\`);
+      }
+      const tokenData = await tokenResponse.json();
+      const access_token = tokenData.access_token;
+      if (!access_token) {
+        throw new Error("Access token missing in token response");
+      }
+      showToast("success", "Access token obtained");
+
+      // Update formData with access_token
+      setFormData((prev) => ({ ...prev, access_token }));
+
+      // 3. POST to generate link
+      const generateLinkResponse = await fetch(
+        "https://137c-2404-7c80-5c-eaba-f5c6-9913-ec59-4f68.ngrok-free.app/mmp/generate-link",
+        {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            access_token,
+          }),
+        }
+      );
+      if (!generateLinkResponse.ok) {
+        throw new Error(\`Failed to generate link: \${generateLinkResponse.statusText}\`);
+      }
+      const generateLinkData = await generateLinkResponse.json();
+      showToast("success", "Link generated successfully");
+
+      // Optionally, you can do something with generateLinkData here
+
+    } catch (error: any) {
+      setWidgetError(error.message || "An error occurred");
+      showToast("error", error.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+<<<<<<< REPLACE
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setWidgetError(null);
+    setLoading(true);
+
+    const newErrors: FormErrors = {};
+    if (!formData.userId) newErrors.userId = "User ID is required.";
+    if (!formData.access_token)
+      newErrors.access_token = "Access Token is required.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setShowClientAuthForm(false);
+      setLoading(false); // Don't forget to stop loading on error
+
+      // Show toast for each error message
+      Object.values(newErrors).forEach((errorMessage) => {
+        showToast("error", errorMessage);
+      });
+    } else {
+      setErrors({});
+      setShowClientAuthForm(true);
+      // Let the widget handle further async work — stop loading right after form show
+      setLoading(false);
+    }
+  };
+>>>>>>> REPLACE
+=======
+      {!Object.keys(errors).length && widgetError == null && !showClientAuthForm && (
+        <form onSubmit={handleSubmit} noValidate className="auth-form">
+          <h2 className="form-title">Authentication Form</h2>
+          <div className="form-group">
+            <label className="block text-sm font-semibold text-gray-700">
+              User ID
+            </label>
+            <input
+              type="text"
+              name="userId"
+              value={formData.userId}
+              onChange={handleChange}
+              className="w-full px-4 py-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Access Token</label>
+            <input
+              type="text"
+              name="access_token"
+              value={formData.access_token}
+              onChange={handleChange}
+            />
+          </div>
+
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? "Loading..." : "Add"}
+          </button>
+        </form>
+      )}
+=======
+      {!Object.keys(errors).length && widgetError == null && !showClientAuthForm && (
+        <>
+          <form onSubmit={handleSubmit} noValidate className="auth-form">
+            <h2 className="form-title">Authentication Form</h2>
+            <div className="form-group">
+              <label className="block text-sm font-semibold text-gray-700">
+                User ID
+              </label>
+              <input
+                type="text"
+                name="userId"
+                value={formData.userId}
+                onChange={handleChange}
+                className="w-full px-4 py-2 mt-1 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Access Token</label>
+              <input
+                type="text"
+                name="access_token"
+                value={formData.access_token}
+                onChange={handleChange}
+              />
+            </div>
+
+            <button type="submit" className="submit-btn" disabled={loading}>
+              {loading ? "Loading..." : "Add"}
+            </button>
+          </form>
+
+          <button
+            onClick={handleGetCredentialsAndGenerateLink}
+            className="submit-btn"
+            disabled={loading}
+            style={{ marginTop: "20px" }}
+          >
+            {loading ? "Loading..." : "Get Credentials and Generate Link"}
+          </button>
+        </>
+      )}
