@@ -251,8 +251,8 @@ const showToast = (message: string, type: "success" | "error" = "success") => {
       }
 
       // 3️⃣ Build iframe URL
-      const url = new URL("https://chatbot-ten-beryl-86.vercel.app/");
-      // const url = new URL("http://localhost:3000/");
+      const url = new URL("https://amus-fe-git-ocr-xpertwebapps-projects.vercel.app/");
+      // const url = new URL("http://localhost:3001/");
 
       url.searchParams.append("user_id", sessionData.user_id.trim());
       url.searchParams.append("session_id", sessionData.session_id.trim());
